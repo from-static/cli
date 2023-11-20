@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { mkdirSync, rmdirSync, existsSync, readFileSync, writeFileSync } = require('node:fs');
+const { mkdirSync, rmdirSync, existsSync, readFileSync, writeFileSync, cpSync } = require('node:fs');
 const { join } = require('node:path');
 const { execSync } = require('node:child_process');
 
@@ -22,10 +22,17 @@ function getRenderer(type) {
 
 require('yargs/yargs')(process.argv.slice(2))
   .command('build', 'build from static.json', (yargs) => {
-    yargs.option('path', {
+    yargs
+    .option('path', {
       type: 'string',
       default: 'static.json',
       describe: 'path to the static.json file to processs'
+    })
+    .option('out-directory', {
+      alias: 'out',
+      type: 'string',
+      default: './out',
+      describe: 'path the "out" directory will be saved to'
     })
   }, (argv) => {
     const staticExists = existsSync(argv.path);
@@ -54,6 +61,13 @@ require('yargs/yargs')(process.argv.slice(2))
 
     execSync(`cd ${workspace} && npm run build`);
 
+    cpSync(join(workspace, 'out'), argv.out, {
+      recursive: true
+    });
+
+    rmdirSync(workspace, {
+      recursive: true
+    });
   })
   .help()
   .argv
