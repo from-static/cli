@@ -1,0 +1,16 @@
+{
+  "name": "static-cli",
+  "version": "1.0.0",
+  "description": "",
+  "bin": {
+    "static": "./bin/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "yargs": "^17.7.2"
+  }
+}
