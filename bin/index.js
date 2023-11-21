@@ -7,11 +7,11 @@ const { execSync } = require('node:child_process');
 const RENDERERS = {
   RESUME: {
     id: 'RESUME',
-    repository: 'git@github.com:from-static/static-resume.git'
+    repository: 'https://github.com/from-static/static-resume.git'
   },
   RESEARCH_DATA_PORTAL: {
     id: 'RESEARCH_DATA_PORTAL',
-    repository: 'git@github.com:from-static/static-research-data-portal.git'
+    repository: 'https://github.com/from-static/static-research-data-portal.git'
   }
 }
 
@@ -33,6 +33,10 @@ require('yargs/yargs')(process.argv.slice(2))
       type: 'string',
       default: './out',
       describe: 'path the "out" directory will be saved to'
+    })
+    .option('next-base-path', {
+      type: 'string',
+      describe: 'Next.js basePath option'
     })
   }, (argv) => {
     const staticExists = existsSync(argv.path);
@@ -58,6 +62,19 @@ require('yargs/yargs')(process.argv.slice(2))
     execSync(`cd ${workspace} && git clone ${renderer.repository} . && npm ci`);
 
     writeFileSync(join(workspace, 'static.json'), JSON.stringify(STATIC));
+
+    const nextConfiguration = {
+      output: 'export'
+    }
+
+    if (argv.nextBasePath) {
+      nextConfiguration.basePath = argv.nextBasePath
+    }
+
+    writeFileSync(
+      join(workspace, 'next.config.js'),
+      `module.exports = ${JSON.stringify(nextConfiguration)}`
+    )
 
     execSync(`cd ${workspace} && npm run build`);
 
