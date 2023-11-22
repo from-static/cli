@@ -4,22 +4,6 @@ const { mkdirSync, rmdirSync, existsSync, readFileSync, writeFileSync, cpSync } 
 const { join } = require('node:path');
 const { execSync } = require('node:child_process');
 
-const RENDERERS = {
-  RESUME: {
-    id: 'RESUME',
-    repository: 'https://github.com/from-static/static-resume.git'
-  },
-  RESEARCH_DATA_PORTAL: {
-    id: 'RESEARCH_DATA_PORTAL',
-    repository: 'https://github.com/from-static/static-research-data-portal.git'
-  }
-}
-
-function getRenderer(type) {
-  return RENDERERS[type?.toUpperCase()];
-}
-
-
 require('yargs/yargs')(process.argv.slice(2))
   .command('build', 'build from static.json', (yargs) => {
     yargs
@@ -57,9 +41,12 @@ require('yargs/yargs')(process.argv.slice(2))
 
     mkdirSync(workspace);
 
-    const renderer = getRenderer(STATIC.type);
+    const {
+      application,
+      version
+    } = STATIC['_static']; 
 
-    execSync(`cd ${workspace} && git clone ${renderer.repository} . && npm ci`);
+    execSync(`cd ${workspace} && git clone ${application} . && npm ci`);
 
     writeFileSync(join(workspace, 'static.json'), JSON.stringify(STATIC));
 
