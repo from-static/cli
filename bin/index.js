@@ -45,24 +45,37 @@ require('yargs/yargs')(process.argv.slice(2))
       application,
       version
     } = STATIC['_static']; 
-
+    /**
+     * Clone the application into our workspace and install the dependencies.
+     */
     execSync(`cd ${workspace} && git clone ${application} . && npm ci`);
-
+    /**
+     * Copy the static.json file to the workspace.
+     */
     writeFileSync(join(workspace, 'static.json'), JSON.stringify(STATIC));
-
+    /**
+     * Create a Next.js configuration that will result in a static export.
+     */
     const nextConfiguration = {
       output: 'export'
     }
-
+    /**
+     * Allow for specifying the basePath option for Next.js.
+     * This is useful (required) for deploying a repository on GitHub Pages (without a CNAME).
+     */
     if (argv.nextBasePath) {
       nextConfiguration.basePath = argv.nextBasePath
     }
-
+    /**
+     * Write the Next.js configuration to the workspace.
+     */
     writeFileSync(
       join(workspace, 'next.config.js'),
       `module.exports = ${JSON.stringify(nextConfiguration)}`
     )
-
+    /**
+     * Run the build command (expected to run `next build`)
+     */
     execSync(`cd ${workspace} && npm run build`);
 
     cpSync(join(workspace, 'out'), argv.out, {

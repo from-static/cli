@@ -1,15 +1,15 @@
 {
-  "name": "static-cli",
+  "name": "@from-static/cli",
   "version": "1.0.0",
-  "description": "",
+  "description": "CLI for interacting with, parsing, and building from a `static.json` file.",
   "bin": {
     "static": "./bin/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Joe Bottigliero",
+  "license": "MIT",
   "dependencies": {
     "yargs": "^17.7.2"
   }
