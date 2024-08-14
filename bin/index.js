@@ -1,90 +1,62 @@
 #!/usr/bin/env node
 
-const { mkdirSync, rmdirSync, existsSync, readFileSync, writeFileSync, cpSync } = require('node:fs');
+const { mkdirSync, rmdirSync, existsSync, readFileSync, writeFileSync, symlinkSync } = require('node:fs');
 const { join } = require('node:path');
 const { execSync } = require('node:child_process');
 
 require('yargs/yargs')(process.argv.slice(2))
-  .command('build', 'build from static.json', (yargs) => {
+  .command('preview', 'preview a site generated from a static.json file', (yargs) => {
     yargs
     .option('path', {
       type: 'string',
-      default: 'static.json',
-      describe: 'path to the static.json file to processs'
-    })
-    .option('out-directory', {
-      alias: 'out',
-      type: 'string',
-      default: './out',
-      describe: 'path the "out" directory will be saved to'
-    })
-    .option('next-base-path', {
-      type: 'string',
-      describe: 'Next.js basePath option'
+      default: process.cwd(),
+      describe: 'path to the application to preview'
     })
   }, (argv) => {
-    const staticExists = existsSync(argv.path);
+    const STATIC_FILE_PATH = join(argv.path, 'static.json');
+
+    const staticExists = existsSync(STATIC_FILE_PATH);
     if (!staticExists) {
-      throw Error(`Unable to locate ${argv.path}`);
+      throw Error(`Unable to locate ${STATIC_FILE_PATH}`);
     }
 
-    const STATIC = JSON.parse(readFileSync(argv.path));
+    const STATIC = JSON.parse(readFileSync(STATIC_FILE_PATH));
 
-    const workspace = join(__dirname, '..', 'workspace');
-
+    const workspace = '.static--preview';
     const exists = existsSync(workspace);
     if (exists) {
+      /**
+       * Remove the workspace if it exists.
+       */
       rmdirSync(workspace, {
         recursive: true
       });
     }
-
+    /**
+     * Create a new workspace.
+     */
     mkdirSync(workspace);
 
-    const {
-      application,
-      version
-    } = STATIC['_static']; 
+    const generator = JSON.parse(execSync(`npm show ${STATIC._static.generator.name} --json`));
+
+    const repository = generator.repository.url.replace('git+', '');
+
     /**
      * Clone the application into our workspace and install the dependencies.
      */
-    execSync(`cd ${workspace} && git clone ${application} . && npm ci`);
+    console.log('Cloning the generator repository and installing dependencies...');
+    execSync(`cd ${workspace} && git clone ${repository} . && npm ci`);
     /**
      * Copy the static.json file to the workspace.
      */
-    writeFileSync(join(workspace, 'static.json'), JSON.stringify(STATIC));
+    console.log('Symlinking your files to the workspace...');
+    execSync(`ln -sf ${STATIC_FILE_PATH} ${join(workspace, 'static.json')}`);
+    execSync(`ln -sf ${join(argv.path, 'content')} ${join(workspace, 'content')}`);
     /**
-     * Create a Next.js configuration that will result in a static export.
+     * Run the ecosystem's preview command.
      */
-    const nextConfiguration = {
-      output: 'export'
-    }
-    /**
-     * Allow for specifying the basePath option for Next.js.
-     * This is useful (required) for deploying a repository on GitHub Pages (without a CNAME).
-     */
-    if (argv.nextBasePath) {
-      nextConfiguration.basePath = argv.nextBasePath
-    }
-    /**
-     * Write the Next.js configuration to the workspace.
-     */
-    writeFileSync(
-      join(workspace, 'next.config.js'),
-      `module.exports = ${JSON.stringify(nextConfiguration)}`
-    )
-    /**
-     * Run the build command (expected to run `next build`)
-     */
-    execSync(`cd ${workspace} && npm run build`);
-
-    cpSync(join(workspace, 'out'), argv.out, {
-      recursive: true
-    });
-
-    rmdirSync(workspace, {
-      recursive: true
-    });
+    console.log('Starting the preview server...');
+    execSync(`cd ${workspace} && npm run dev`);
   })
   .help()
   .argv

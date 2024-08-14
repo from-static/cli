@@ -1,3 +1,3 @@
 # from-static/cli
 
-CLI for interacting with, parsing, and building from a `static.json` file.
+Experimental CLI for interacting with various lifecycle stages of a projects adhering to the [`static`](https://github.com/from-static) pattern.
