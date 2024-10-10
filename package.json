@@ -10,7 +10,12 @@
   },
   "author": "Joe Bottigliero",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
+    "chokidar": "^4.0.1",
+    "pm2": "^5.4.2",
     "yargs": "^17.7.2"
   }
 }
